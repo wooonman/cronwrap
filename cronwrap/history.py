@@ -51,12 +51,28 @@ def summarize(entries: List[LogEntry]) -> RunSummary:
     )
 
 
-def print_history(log_path: Path, limit: int = 20) -> None:
-    """Pretty-print recent history to stdout."""
+def filter_failures(entries: List[LogEntry]) -> List[LogEntry]:
+    """Return only the entries where the command exited with a non-zero code."""
+    return [e for e in entries if e.exit_code != 0]
+
+
+def print_history(log_path: Path, limit: int = 20, failures_only: bool = False) -> None:
+    """Pretty-print recent history to stdout.
+
+    Args:
+        log_path: Path to the log file.
+        limit: Maximum number of recent entries to display.
+        failures_only: When True, only failed runs are shown.
+    """
     entries = get_history(log_path, limit)
     if not entries:
         print("No history found.")
         return
+    if failures_only:
+        entries = filter_failures(entries)
+        if not entries:
+            print("No failures found in recent history.")
+            return
     summary = summarize(entries)
     print(f"Last {len(entries)} runs  |  "
           f"Success rate: {summary.success_rate:.1f}%  |  "
