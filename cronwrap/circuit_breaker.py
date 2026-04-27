@@ -97,6 +97,14 @@ def record_outcome(cfg: CircuitBreakerConfig, success: bool) -> CircuitState:
     return state
 
 
-def reset_circuit(cfg: CircuitBreakerConfig) -> None:
-    """Manually reset the circuit to closed."""
-    _write_state(cfg, CircuitState())
+def reset(cfg: CircuitBreakerConfig) -> None:
+    """Manually reset the circuit breaker to closed state.
+
+    Useful for operator intervention after investigating a failing job.
+    Deletes the state file if it exists, which is equivalent to a fresh start.
+    """
+    if not cfg.enabled:
+        return
+    p = _state_path(cfg)
+    if p.exists():
+        p.unlink()
